@@ -16,7 +16,7 @@ multiple EHR entries for the same patient ID.
 from datetime import datetime
 
 
-def parse_data(filename: str) -> list[list]:
+def parse_data(filename: str) -> list[list[str]]:
     r"""Parse data in text file to a list of lists.
 
     Assumptions:
@@ -45,7 +45,7 @@ def parse_data(filename: str) -> list[list]:
     return results  # O(1)
 
 
-def num_older_than(compared_age: float, dat: list[list]) -> int:
+def num_older_than(compared_age: float, patient_data: list[list[str]]) -> int:
     """Compute the number of individuals older than a given age.
 
     Assumptions:
@@ -59,19 +59,18 @@ def num_older_than(compared_age: float, dat: list[list]) -> int:
     Establishing count as 0 and the current day count as two single operations.
     A for-loop is used to iterate over each row, excluding the header row,
     for a total of N - 1 times. The patient's birthday is then used to
-    calculate age over 4 operations. It takes one operation to compare age,
+    calculate age over 3 operations. It takes one operation to compare age,
     and one operation to add to count. The for-loop thus has a complexity
-    of 6*(N-1). Returning count is an additional single operation. For
+    of 5*(N-1). Returning count is an additional single operation. For
     big-O analysis, constants can be ignored, leaving a complexity
     of O(N).
 
     """
     count = 0  # O(1)
     today = datetime.today()  # O(1)
-    for patient_data in dat[1:]:  # N - 1 times
-        birthday = patient_data[2]  # O(1)
-        birthday = birthday[0:10]  # O(1)
-        birthday = datetime.strptime(birthday, "%Y-%m-%d")  # O(1)
+    for patient in patient_data[1:]:  # N - 1 times
+        DOB = patient[2][0:10]  # O(1)
+        birthday = datetime.strptime(DOB, "%Y-%m-%d")  # O(1)
         age = (
             today.year
             - birthday.year
@@ -82,7 +81,9 @@ def num_older_than(compared_age: float, dat: list[list]) -> int:
     return count  # O(1)
 
 
-def sick_patients(lab: str, gt_lt: str, value: float, dat: list[list]) -> list:
+def sick_patients(
+    lab: str, gt_lt: str, value: float, lab_data: list[list[str]]
+) -> set[str]:
     """Find unique patient IDs with a lab value greater/less than given value.
 
     Assumptions:
@@ -95,15 +96,19 @@ def sick_patients(lab: str, gt_lt: str, value: float, dat: list[list]) -> list:
     Computational complexity:
     A blank list is created with a single operation. Each patient encounter is
     checked to see if the lab name matches the inputted one, for a total
-    of N - 1 operations as the header row is excluded. Three operations
-    are then computed for each loop, resulting in 3*(N-1) operations from
+    of N - 1 operations as the header row is excluded. Up to four operations
+    are then computed for each loop, resulting in 4*(N-1) operations from
     the for-loop. Return adds another single operation. Constant factors
     are ignored for big-O analysis, so this is of O(N) complexity.
 
     """
-    pat_ids = []  # O(1)
-    for encounter in dat[1:]:  # N - 1 times
+    pat_ids = set()  # O(1)
+    for encounter in lab_data[1:]:  # N - 1 times
         if encounter[2] == lab:  # O(1)
-            if eval(f"{encounter[3]} {gt_lt} {value}") is True:  # O(1)
-                pat_ids.append(encounter[0])  # O(1)
-    return list(set(pat_ids))  # O(1)
+            if gt_lt == ">":  # O(1)
+                if float(encounter[3]) > value:  # O(1)
+                    pat_ids.add(encounter[0])  # O(1)
+            elif gt_lt == "<":  # O(1)
+                if float(encounter[3]) < value:  # O(1)
+                    pat_ids.add(encounter[0])  # O(1)
+    return pat_ids  # O(1)
