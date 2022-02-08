@@ -111,4 +111,6 @@ def sick_patients(
             elif gt_lt == "<":  # O(1)
                 if float(encounter[3]) < value:  # O(1)
                     pat_ids.add(encounter[0])  # O(1)
+            else:
+                raise ValueError("Second input should be '<' or '>'")
     return pat_ids  # O(1)
