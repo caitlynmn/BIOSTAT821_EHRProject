@@ -1,13 +1,25 @@
 # BIOSTAT821_EHRProject
 
-# Setup
+# Setup and installation
+To install Python, please refer to [Python Packaging Installation Instructions](https://packaging.python.org/en/latest/tutorials/installing-packages/).
 
-## Data parsing
+To install Git, please refer to [Git Guides](https://github.com/git-guides/install-git).
+
+To install Pytest, please refer to [Pytest Documentation](https://docs.pytest.org/en/6.2.x/getting-started.html).
+
 The module `ehr_analysis.py` contains the functions `parse_data`, `num_older_than`, `sick_patients`, and `age_at_admission`.
 
+Patient demographic EHR data is taken in as a tab-separated table .txt file with the following columns of data as its variables: `PatientID`, `PatientGender`, `PatientDateOfBirth`, `PatientRace`, `PatientMaritalStatus`, `PatientLanguage`, and `PatientPopulationPercentageBelowPoverty`. The .txt. file `PatientCorePopulatedTable.txt` is included as an example file for demographic EHR data.
+
+Laboratory EHR data is taken in as a tab-separated table .txt file with the following columns of data as its variables: `PatientID`, `AdmissionID`, `LabName`, `LabValue`, `LabUnits`, and `LabDateTime`. The .txt. file `LabsCorePopulatedTable.txt` is included as an example file for laboratory EHR data.
+
+# Function Descriptions
+
+## Data parsing
+
 The function `parse_data(filename: str) -> parse_data(filename: str) -> list[list[str]]` takes in 
-* A table of patients with demographic data: `PatientCorePopulatedTable.txt`
-* A table of laboratory results: `LabsCorePopulatedTable.txt`
+* A table of patients with demographic data. For example, `PatientCorePopulatedTable.txt`.
+* A table of laboratory results. For example, `LabsCorePopulatedTable.txt`.
 
 The output is a list of list of strings of the parsed data, with each nested list being a patient's unique data.
 
@@ -72,3 +84,19 @@ Assumptions:
 * All assumptions in the num_older_than function.
 * Lab date is recorded in the sixth column of the lab data file.
 * Lab dates are recorded as "YYYY-MM-DD".
+
+# Testing
+
+The files `LabData_Test.txt` and `PatientData_Test.txt` are included to be used with the `ehr_analysis_test.py` testing module. To test the `ehr_analysis.py` module, run the `ehr_analysis_test.py` module by typing in the console:
+
+``` python
+pytest ehr_analysis_test.py
+```
+
+A 100% passed test result should appear similar to:
+
+``` python
+ehr_analysis_test.py ....                                                                    [100%]
+
+======================================== 4 passed in 0.11s ========================================
+```
