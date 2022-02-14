@@ -31,8 +31,6 @@ Assumptions:
 
 ## Analysis
 
-Define the following functions to interrogate the data. In each one, include a function docstring describing its computational complexity _at runtime_ (i.e. after parsing into the global data structures).
-
 ### Old patients
 
 The function `num_older_than(compared_age: float, patient_data: list[list[str]]) -> int` takes the data and returns the number of patients older than a given age (in years). For example,
@@ -56,7 +54,7 @@ The function `sick_patients(
 ) -> set[str]` takes the data and returns a (unique) list of patients who have a given test with value above (">") or below ("<") a given level. For example,
 
 ```python
->> sick_patients("CBC: LYMPHOCYTES", "<", 0.8, b)
+>> sick_patients("CBC: LYMPHOCYTES", "<", 0.8, lab_data)
 {'016A590E-D093-4667-A5DA-D68EA6987D93',
  '0681FA35-A794-4684-97BD-00B88370DB41', ...}
 ```
