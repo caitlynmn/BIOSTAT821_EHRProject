@@ -1,7 +1,7 @@
 """Test EHR analysis."""
 
 import pytest
-from ehr_analysis import parse_data, num_older_than, sick_patients
+from ehr_analysis import parse_data, num_older_than, sick_patients, age_at_admission
 from datetime import datetime
 
 # Create dictionary of possible options in lab and patient data
@@ -65,10 +65,51 @@ def test_sick_patients():
         == str
     )
     assert (
-        len(sick_patients("CBC: RED BLOOD CELL COUNT", "<", 80, lab_data_example)) == 3
+        len(sick_patients("CBC: RED BLOOD CELL COUNT", "<", 80, lab_data_example)) == 2
     )
     assert len(sick_patients("METABOLIC: CREATININE", ">", 90, lab_data_example)) == 2
     with pytest.raises(ValueError):
         sick_patients("CBC: RED BLOOD CELL COUNT", ">=", 10, lab_data_example)
         sick_patients("CBC: RED BLOOD CELL COUNT", "wrong input", 10, lab_data_example)
         sick_patients("CBC: RED BLOOD CELL COUNT", "< ", 10, lab_data_example)
+
+
+def test_age_at_admission():
+    """Test age_at_admission() function."""
+    assert (
+        age_at_admission(
+            "EITSIO5D-YZF2-KYU2-QYVB-0CYV1AQ4AWH3", pat_data_example, lab_data_example
+        )
+        == 6
+    )
+    assert (
+        age_at_admission(
+            "315AHQQH-Y4MW-MDY4-UDYX-ESTMBGKASAGY", pat_data_example, lab_data_example
+        )
+        == 15
+    )
+    assert (
+        age_at_admission(
+            "5UGO1HF9-QFVJ-PW9E-WMS5-SLCOUGK8NAZ7", pat_data_example, lab_data_example
+        )
+        == 18
+    )
+    assert (
+        age_at_admission(
+            "ORM1FW1N-BYOI-J3ZA-0PLB-MJ9SNP3H1WFF", pat_data_example, lab_data_example
+        )
+        == 7
+    )
+    assert (
+        age_at_admission(
+            "UWO429L9-E60B-LJEO-M1U2-NHJSBHCSOZDD", pat_data_example, lab_data_example
+        )
+    ) == 24
+    with pytest.raises(ValueError):
+        age_at_admission("aaa", pat_data_example, lab_data_example)
+        age_at_admission(
+            "9VWI26ZY-R196-J48V-TLUK-E045NMVQ0KYG", pat_data_example, lab_data_example
+        )
+        age_at_admission(
+            "EITSIO5D-YZF2-KYU2-QYVB-0CYV1AQ4AWH3 ", pat_data_example, lab_data_example
+        )
