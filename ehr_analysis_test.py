@@ -31,9 +31,9 @@ lab_data_example = parse_data("LabData_Test.txt")
 def test_parse_data():
     """Test parse_data() function."""
     # Test patient data
-    assert type(pat_data_example) == list
-    assert type(pat_data_example[0]) == list
-    assert type(pat_data_example[0][2]) == str
+    assert isinstance(pat_data_example, list)
+    assert isinstance(pat_data_example[0], list)
+    assert isinstance(pat_data_example[0][2], str)
     assert len(pat_data_example) == 10
     assert len(pat_data_example[0]) == 7
     assert pat_data_example[4][1] in options_dict["PatientGender"]
@@ -49,7 +49,7 @@ def test_parse_data():
 
 def test_num_older_than():
     """Test num_older_than() function."""
-    assert type(num_older_than(20, pat_data_example)) == int
+    assert isinstance(num_older_than(20, pat_data_example), int)
     assert num_older_than(52, pat_data_example) == 6
     assert num_older_than(92, pat_data_example) == 2
     assert num_older_than(72, pat_data_example) == 6
@@ -57,13 +57,14 @@ def test_num_older_than():
 
 def test_sick_patients():
     """Test sick_patients() function."""
-    assert type(sick_patients("METABOLIC: POTASSIUM", ">", 30, lab_data_example)) == set
-    assert (
-        type(
-            list(sick_patients("METABOLIC: POTASSIUM", ">", 30, lab_data_example)).pop()
-        )
-        == str
+    assert isinstance(
+        sick_patients("METABOLIC: POTASSIUM", ">", 30, lab_data_example), set
     )
+    assert isinstance(
+        list(sick_patients("METABOLIC: POTASSIUM", ">", 30, lab_data_example)).pop(),
+        str,
+    )
+
     assert (
         len(sick_patients("CBC: RED BLOOD CELL COUNT", "<", 80, lab_data_example)) == 2
     )

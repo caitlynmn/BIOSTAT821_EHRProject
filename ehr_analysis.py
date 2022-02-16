@@ -134,7 +134,7 @@ def age_at_admission(
     dataset, then the patient's date of birth is recorded and the
     algorithm stops iterating for a total of 3 operations. If the patient
     ID is not found in the patient dataset, then a ValueError is raised using
-    four single operations. If the ID is in the dataset, then only
+    two single operations. If the ID is in the dataset, then only
     two single operations are done. Then a single operation is used
     to assign patient age to a large number. The algorithm then iterates
     M times, where M = the number of lab encounters in the lab dataset. Up to
@@ -154,11 +154,10 @@ def age_at_admission(
         if patID == patient[0]:  # O(1)
             patient_DOB = patient[2][0:10]  # O(1)
             break  # O(1)
-
-    try:  # O(1)
-        patient_DOB  # O(1)
-    except UnboundLocalError:  # O(1)
-        raise ValueError("Patient ID is not found in provided patient dataset.")  # O(1)
+        elif patient == patient_data[-1]:  # O(1)
+            raise ValueError(
+                "Patient ID is not found in the provided patient dataset."
+            )  # O(1)
 
     patient_age = 999  # O(1)
     for encounter in lab_data[1:]:  # M times
@@ -178,4 +177,4 @@ def age_at_admission(
     if patient_age != 999:  # O(1)
         return patient_age  # O(1)
     else:  # O(1)
-        raise ValueError("Patient ID is not found in provided lab dataset.")  # O(1)
+        raise ValueError("Patient ID is not found in the provided lab dataset.")  # O(1)
