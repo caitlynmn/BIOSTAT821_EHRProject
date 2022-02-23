@@ -16,7 +16,7 @@ Laboratory EHR data is taken in as a tab-separated table .txt file with the foll
 # Class Descriptions
 
 ## Lab Class
-The Lab class is initialized as: `Lab(PATID: str, AdmissionID: str, LabName: str, LabValue: float, LabUnits: str, LabDateTime: datetime`.
+The Lab class is initialized as: `Lab(PATID: str, AdmissionID: str, LabName: str, LabValue: float, LabUnits: str, LabDateTime: datetime)`.
 
 The Lab class has the following instance attributes:
 * PATID
