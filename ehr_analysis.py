@@ -237,6 +237,7 @@ def sick_patients(
     - Patient ID is recorded in the first column.
     - Lab name is recorded in the third column.
     - Lab value is recorded in the fourth column.
+    - All patients have the desired lab in their lab records.
 
     Computational complexity:
     A blank set is created with a single operation. Each patient is checked
