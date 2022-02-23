@@ -64,13 +64,12 @@ class Patient:
     def lab_dict(self):
         """Transform lab objects to dictionary.
 
-        Creates a dictionary with the lab names as keys and
-        a dictionary with the keys "Value", "Units", "Date", and "Age"
-        for the corresponding lab name as the the value.
-
-        Complexity is O(M) as it is required to loop over each lab for
-        the patient, assuming that this is the first call to the property.
-        All other single operations are ignored for big O analysis.
+        Creates a dictionary with the keys being the lab names and the values
+        being a dictionary with the keys "Value", "Units", "Date", and "Age"
+        for the corresponding lab. Complexity is O(M) as it is required to
+        loop over each lab for the patient, assuming that this is the first
+        call to the property. All other single operations are ignored for
+        big O analysis.
         """
         if self._lab_dict is None:  # O(1)
             lab_dict: dict = dict()  # O(1)
@@ -111,8 +110,8 @@ class Patient:
     def check_lab_values(self, lab_name: str, gt_lt: str, value: float):
         """Check if lab values are greater/less than given value.
 
-        Returns True if lab values are greater/less than given value,
-        False if condition is not met.
+        Returns True if lab values are greater/less than given value or
+        False if the condition is not met.
 
         Complexity is O(M) assuming self.lab_dict has not been run yet in
         the worst-case scenario. All other operations are single, which are
@@ -137,11 +136,24 @@ def parse_data(patient_file: str, lab_file: str) -> list[Patient]:
     r"""Parse lab and patient data to a list of patient objects.
 
     Assumptions:
-    - filename is a string of the name of the lab EHR data .txt file.
-    - Each line in the data .txt file is a lab's data.
-    - Each column in the data .txt file is an EHR variable.
-    - Values within a row are separated by the tab character '\t\'.
-    - All patients in the patient EHR file have labs in the lab EHR file.
+    * patient_file is a string of the name of the patient EHR data .txt file.
+    * lab_file is a string of the name of the lab EHR data .txt file.
+    * Each line in the data .txt file is single datapoint.
+    * Each column in the data .txt file is an EHR variable.
+    * Values within a row are separated by the tab character '\t\'.
+    * All patients in the patient EHR file have labs in the lab EHR file.
+    * For the Lab data file:
+        * The first row in the EHR data is the variable names.
+        * The columns of data are in the following order: PatientID,
+            AdmissionID, LabName, LabValue, LabUnits, LabDateTime
+        * LabeDateTime is recorded as "YYYY-MM-DD".
+    * For the Patient data file:
+        * The first row in the EHR data is the variable names.
+        * The columns of data are in the following order: PatientID,
+            PatientGender, PatientDateOfBirth, PatientRace,
+            PatientMaritalStatus, PatientLanguage,
+            PatientPopulationPercentageBelowPoverty
+        * PatientDatOfBirth is recorded as "YYYY-MM-DD".
 
     Computational complexity:
     The labs are looped over for M*N times to produce a dictionary of labs,
@@ -204,11 +216,7 @@ def num_older_than(compared_age: float, patient_list: list[Patient]) -> int:
     """Compute the number of individuals older than a given age.
 
     Assumptions:
-    - All the assumptions in the parse_data function.
-    - The first row in the EHR data is the variable names.
-    - Patient ID is recorded in the first column.
-    - Patient date of birth is recorded in the third column of the EHR file.
-    - Patient date of birth is recorded as "YYYY-MM-DD".
+    * All the assumptions in the parse_data function.
 
     Computational complexity:
     Establishing count as 0 is a single operation. A for-loop is used to
@@ -232,12 +240,8 @@ def sick_patients(
     """Find unique patient IDs with a lab value greater/less than given value.
 
     Assumptions:
-    - All the assumptions in the parse_data function.
-    - The first row in the EHR data is the variable names.
-    - Patient ID is recorded in the first column.
-    - Lab name is recorded in the third column.
-    - Lab value is recorded in the fourth column.
-    - All patients have the desired lab in their lab records.
+    * All the assumptions in the parse_data function.
+    * All patients have the desired lab in their lab records.
 
     Computational complexity:
     A blank set is created with a single operation. Each patient is checked
@@ -259,11 +263,7 @@ def age_at_admission(patID: str, patient_list: list[Patient]) -> float:
     """Compute age at first admission for any given patient.
 
     Assumptions:
-    - All the assumptions in the parse_data function.
-    - All assumptions in the num_older_than function.
-    - Lab date is recorded in the sixth column of the lab data file.
-    - Lab dates are recorded as "YYYY-MM-DD".
-    - All patients in the patient data have labs in the lab data.
+    * All the assumptions in the parse_data function.
 
     Computational complexity:
     The provided patient ID is searched for within the provided patient data
