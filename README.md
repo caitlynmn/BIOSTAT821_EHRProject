@@ -80,7 +80,7 @@ Assumptions:
 The function `num_older_than(compared_age: float, patient_list: list[Patient]) -> int` takes the data and returns the number of patients older than a given age (in years). For example,
 
 ```python
->> num_older_than(52, patient_data)
+>> num_older_than(52, patient_list)
 74
 ```
 
@@ -94,7 +94,7 @@ The function `sick_patients(
 ) -> set[str]` takes the data and returns a (unique) list of patients who have a given test with value above (">") or below ("<") a given level. For example,
 
 ```python
->> sick_patients("CBC: LYMPHOCYTES", "<", 0.8, lab_data)
+>> sick_patients("CBC: LYMPHOCYTES", "<", 0.8, patient_list)
 {'016A590E-D093-4667-A5DA-D68EA6987D93',
  '0681FA35-A794-4684-97BD-00B88370DB41', ...}
 ```
@@ -105,12 +105,10 @@ Assumptions:
 
 ### Age at admission
 
-The function `age_at_admission(
-    patID: str, patient_data: list[list[str]], lab_data: list[list[str]]
-) -> float` takes the patient demographic data and lab data and returns the age at admission (first lab encounter) for a given patient ID. For example,
+The function `age_at_admission(patID: str, patient_list: list[Patient]) -> float` takes the data and returns the age at admission (first lab encounter) for a given patient ID. For example,
 
 ```python
->> age_at_admission("6985D824-3269-4D12-A9DD-B932D640E26E", patient_data, lab_data)
+>> age_at_admission("6985D824-3269-4D12-A9DD-B932D640E26E", patient_list)
 23
 ```
 
