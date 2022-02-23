@@ -29,7 +29,7 @@ The Lab class has the following instance attributes:
 Each instance of the Lab class stores attributes for a single lab datapoint.
 
 ## Patient Class
-The Patient class is initialized as: `Patient(PATID: str, gender: str, DOB: datetime, race: str, marital: str, labs: list[Lab]`.
+The Patient class is initialized as: `Patient(PATID: str, gender: str, DOB: datetime, race: str, marital: str, labs: list[Lab])`.
 
 Each instance of the Patient class stores attributes for a single patient.
 
@@ -51,7 +51,7 @@ The method `check_lab_values(self, lab_name: str, gt_lt: str, value: float)` is 
 
 ## Data parsing
 
-The function `parse_data(patient_file: str, lab_file: str) -> list[Patient]` takes in 
+The function `parse_data(patient_file: str, lab_file: str) -> list[Patient])` takes in 
 * A table of patients with demographic data. For example, `PatientData_Test.txt`.
 * A table of laboratory results. For example, `LabData_Test.txt`.
 
@@ -89,9 +89,7 @@ Assumptions:
 
 ### Sick patients
 
-The function `sick_patients(
-    lab: str, gt_lt: str, value: float, patient_list: list[Patient]
-) -> set[str]` takes the data and returns a (unique) list of patients who have a given test with value above (">") or below ("<") a given level. For example,
+The function `sick_patients(lab: str, gt_lt: str, value: float, patient_list: list[Patient]) -> set[str]` takes the data and returns a (unique) list of patients who have a given test with value above (">") or below ("<") a given level. For example,
 
 ```python
 >> sick_patients("CBC: LYMPHOCYTES", "<", 0.8, patient_list)
