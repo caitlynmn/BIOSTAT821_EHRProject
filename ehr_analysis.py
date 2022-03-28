@@ -12,20 +12,20 @@ class Lab:
 
     def __init__(
         self,
-        PATID: str,
-        AdmissionID: str,
-        LabName: str,
-        LabValue: float,
-        LabUnits: str,
-        LabDateTime: datetime,
+        patid: str,
+        admission_id: str,
+        lab_name: str,
+        lab_value: float,
+        lab_units: str,
+        lab_datetime: datetime,
     ):
         """Initialize."""
-        self.PATID = PATID
-        self.AdmissionID = AdmissionID
-        self.LabName = LabName
-        self.LabValue = LabValue
-        self.LabUnits = LabUnits
-        self.LabDateTime = LabDateTime
+        self.patid = patid
+        self.admission_id = admission_id
+        self.lab_name = lab_name
+        self.lab_value = lab_value
+        self.lab_units = lab_units
+        self.lab_datetime = lab_datetime
 
 
 class Patient:
@@ -33,17 +33,17 @@ class Patient:
 
     def __init__(
         self,
-        PATID: str,
+        patid: str,
         gender: str,
-        DOB: datetime,
+        dob: datetime,
         race: str,
         marital: str,
         labs: list[Lab],
     ):
         """Initialize."""
-        self.PATID = PATID
+        self.patid = patid
         self.gender = gender
-        self.DOB = DOB
+        self.dob = dob
         self.race = race
         self.marital = marital
         self.labs = labs
@@ -55,8 +55,8 @@ class Patient:
         today = datetime.today()
         age = (
             today.year
-            - self.DOB.year
-            - ((today.month, today.day) < (self.DOB.month, self.DOB.day))
+            - self.dob.year
+            - ((today.month, today.day) < (self.dob.month, self.dob.day))
         )
         return age
 
@@ -74,36 +74,13 @@ class Patient:
         if self._lab_dict is None:  # O(1)
             lab_dict: dict = dict()  # O(1)
             for lab in self.labs:  # M times
-                if lab.LabName not in lab_dict.keys():  # O(1)
-                    nested_dict: dict = dict()  # O(1)
-                    nested_dict["Value"] = [lab.LabValue]  # O(1)
-                    nested_dict["Units"] = [lab.LabUnits]  # O(1)
-                    nested_dict["Date"] = [lab.LabDateTime]  # O(1)
-                    age = (
-                        lab.LabDateTime.year
-                        - self.DOB.year
-                        - (
-                            (lab.LabDateTime.month, lab.LabDateTime.day)
-                            < (self.DOB.month, self.DOB.day)
-                        )
-                    )  # O(1)
-                    nested_dict["Age"] = [age]  # O(1)
-                    lab_dict[lab.LabName] = nested_dict  # O(1)
+                if lab.lab_name not in lab_dict.keys():  # O(1)
+                    nested_lab_list = [lab]
+                    lab_dict[lab.lab_name] = nested_lab_list  # O(1)
                 else:  # O(1)
-                    nested_dict = lab_dict[lab.LabName]  # O(1)
-                    nested_dict["Value"].append(lab.LabValue)  # O(1)
-                    nested_dict["Units"].append(lab.LabUnits)  # O(1)
-                    nested_dict["Date"].append(lab.LabDateTime)  # O(1)
-                    age = (
-                        lab.LabDateTime.year
-                        - self.DOB.year
-                        - (
-                            (lab.LabDateTime.month, lab.LabDateTime.day)
-                            < (self.DOB.month, self.DOB.day)
-                        )
-                    )  # O(1)
-                    nested_dict["Age"].append(age)  # O(1)
-                    lab_dict[lab.LabName] = nested_dict  # O(1)
+                    nested_lab_list = lab_dict[lab.lab_name]
+                    nested_lab_list.append(lab)
+                    lab_dict[lab.lab_name] = nested_lab_list  # O(1)
             self._lab_dict = lab_dict  # O(1)
         return self._lab_dict  # O(1)
 
@@ -117,19 +94,23 @@ class Patient:
         the worst-case scenario. All other operations are single, which are
         ignored for big O analysis.
         """
-        lab_values = self.lab_dict[lab_name]["Value"]  # O(M)
-        if gt_lt == ">":  # O(1)
-            if max(lab_values) > value:  # O(1)
-                return True  # O(1)
-            else:  # O(1)
-                return False  # O(1)
-        elif gt_lt == "<":  # O(1)
-            if min(lab_values) < value:  # O(1)
-                return True  # O(1)
-            else:  # O(1)
-                return False  # O(1)
-        else:  # O(1)
-            raise ValueError("Second input should be '<' or '>'")  # O(1)
+
+        if gt_lt != ">" and gt_lt != "<":
+            raise ValueError("Second input should be '<' or '>'")
+        lab_list = self.lab_dict[lab_name]  # O(M)
+        for each_lab in lab_list:
+            if gt_lt == ">":  # O(1)
+                if each_lab.lab_value > value:  # O(1)
+                    return True  # O(1)
+                else:  # O(1)
+                    continue  # O(1)
+            elif gt_lt == "<":  # O(1)
+                if each_lab.lab_value < value:  # O(1)
+                    return True  # O(1)
+                else:  # O(1)
+                    continue  # O(1)
+        else:
+            return False  # O(1)
 
 
 def parse_data(patient_file: str, lab_file: str) -> list[Patient]:
@@ -145,7 +126,7 @@ def parse_data(patient_file: str, lab_file: str) -> list[Patient]:
     * For the Lab data file:
         * The first row in the EHR data is the variable names.
         * The columns of data are in the following order: PatientID,
-            AdmissionID, LabName, LabValue, LabUnits, LabDateTime
+            admission_id, lab_name, lab_value, lab_units, lab_datetime
         * LabeDateTime is recorded as "YYYY-MM-DD".
     * For the Patient data file:
         * The first row in the EHR data is the variable names.
@@ -157,7 +138,7 @@ def parse_data(patient_file: str, lab_file: str) -> list[Patient]:
 
     Computational complexity:
     The labs are looped over for M*N times to produce a dictionary of labs,
-    where the keys are the PATIDs and the values are a list of Lab objects
+    where the keys are the patids and the values are a list of Lab objects
     which correspond to the patient. The patients are looped over for
     N times to produce a list of Patient objects. For big-O analysis,
     the constant factors can be ignored, so this function is of
@@ -255,11 +236,11 @@ def sick_patients(
     pat_ids = set()  # O(1)
     for patient in patient_list:  # N times
         if patient.check_lab_values(lab, gt_lt, value):  # O(M)
-            pat_ids.add(patient.PATID)  # O(1)
+            pat_ids.add(patient.patid)  # O(1)
     return pat_ids  # O(1)
 
 
-def age_at_admission(patID: str, patient_list: list[Patient]) -> float:
+def age_at_admission(patid: str, patient_list: list[Patient]) -> float:
     """Compute age at first admission for any given patient.
 
     Assumptions:
@@ -280,16 +261,25 @@ def age_at_admission(patID: str, patient_list: list[Patient]) -> float:
 
     """
     for patient in patient_list:  # N times
-        if patient.PATID == patID:  # O(1)
+        if patient.patid == patid:  # O(1)
             lab_data = patient.lab_dict  # O(M)
+            patient_dob = patient.dob
             break  # O(1)
-        elif patient == patient_list[-1]:  # O(1)
-            raise ValueError("Patient is not in the provided dataset.")  # O(1)
+    else:
+        raise ValueError("Patient is not in the provided dataset.")  # O(1)
 
     patient_age = 999  # O(1)
 
-    for lab_values in lab_data.values():  # M times
-        min_age = min(lab_values["Age"])  # O(1)
-        if min_age < patient_age:  # O(1)
-            patient_age = min_age  # O(1)
-    return patient_age  # O(1)
+    for each_lab_cluster in lab_data.values():
+        for each_lab in each_lab_cluster:
+            age = (
+                each_lab.lab_datetime.year
+                - patient_dob.year
+                - (
+                    (each_lab.lab_datetime.month, each_lab.lab_datetime.day)
+                    < (patient_dob.month, patient_dob.day)
+                )
+            )
+            if age < patient_age:
+                patient_age = age
+    return patient_age
