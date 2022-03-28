@@ -1,7 +1,14 @@
 """Test EHR analysis."""
 
 import pytest
-from ehr_analysis import parse_data, num_older_than, sick_patients, age_at_admission
+from ehr_analysis import (
+    Lab,
+    Patient,
+    parse_data,
+    num_older_than,
+    sick_patients,
+    age_at_admission,
+)
 from datetime import datetime
 
 # Create dictionary of possible options in lab and patient data
@@ -24,93 +31,63 @@ options_dict["LabName"] = [
 options_dict["LabUnits"] = ["mmol/L", "mg/dL", "m/cumm"]
 
 # Run parse_data on test patient and lab EHR txt files
-pat_data_example = parse_data("PatientData_Test.txt")
-lab_data_example = parse_data("LabData_Test.txt")
+data_test = parse_data("PatientData_Test.txt", "LabData_Test.txt")
 
 
 def test_parse_data():
     """Test parse_data() function."""
     # Test patient data
-    assert isinstance(pat_data_example, list)
-    assert isinstance(pat_data_example[0], list)
-    assert isinstance(pat_data_example[0][2], str)
-    assert len(pat_data_example) == 10
-    assert len(pat_data_example[0]) == 7
-    assert pat_data_example[4][1] in options_dict["PatientGender"]
-    assert pat_data_example[6][3] in options_dict["PatientRace"]
-    assert pat_data_example[8][4] in options_dict["PatientMaritalStatus"]
-    assert pat_data_example[2][5] in options_dict["PatientLanguage"]
+    assert isinstance(data_test, list)
+
+    patient_test = data_test[0]
+
+    assert isinstance(patient_test, Patient)
+    assert isinstance(patient_test.labs[0], Lab)
+    assert isinstance(patient_test.patid, str)
+    assert isinstance(patient_test.dob, datetime)
+    assert len(data_test) == 5
+    assert patient_test.gender in options_dict["PatientGender"]
+    assert patient_test.race in options_dict["PatientRace"]
+    assert patient_test.marital in options_dict["PatientMaritalStatus"]
     # Test lab data
-    assert len(lab_data_example) == 20
-    assert len(lab_data_example[0]) == 6
-    assert lab_data_example[2][2] in options_dict["LabName"]
-    assert lab_data_example[5][4] in options_dict["LabUnits"]
+    labs_dict_test = patient_test.lab_dict
+    assert isinstance(labs_dict_test, dict)
+    assert all(lab in options_dict["LabName"] for lab in labs_dict_test)
+    assert labs_dict_test["METABOLIC: POTASSIUM"][0].lab_units == "mmol/L"
+    assert isinstance(labs_dict_test["METABOLIC: CREATININE"][1].lab_datetime, datetime)
 
 
 def test_num_older_than():
     """Test num_older_than() function."""
-    assert isinstance(num_older_than(20, pat_data_example), int)
-    assert num_older_than(52, pat_data_example) == 6
-    assert num_older_than(92, pat_data_example) == 2
-    assert num_older_than(72, pat_data_example) == 6
+    assert isinstance(num_older_than(20, data_test), int)
+    assert num_older_than(52, data_test) == 4
+    assert num_older_than(92, data_test) == 2
+    assert num_older_than(86, data_test) == 3
 
 
 def test_sick_patients():
     """Test sick_patients() function."""
+    assert isinstance(sick_patients("METABOLIC: POTASSIUM", ">", 30, data_test), set)
     assert isinstance(
-        sick_patients("METABOLIC: POTASSIUM", ">", 30, lab_data_example), set
-    )
-    assert isinstance(
-        list(sick_patients("METABOLIC: POTASSIUM", ">", 30, lab_data_example)).pop(),
+        list(sick_patients("METABOLIC: POTASSIUM", ">", 30, data_test)).pop(),
         str,
     )
-
-    assert (
-        len(sick_patients("CBC: RED BLOOD CELL COUNT", "<", 80, lab_data_example)) == 2
-    )
-    assert len(sick_patients("METABOLIC: CREATININE", ">", 90, lab_data_example)) == 2
+    assert len(sick_patients("CBC: RED BLOOD CELL COUNT", "<", 80, data_test)) == 3
+    assert len(sick_patients("METABOLIC: CREATININE", ">", 90, data_test)) == 3
     with pytest.raises(ValueError):
-        sick_patients("CBC: RED BLOOD CELL COUNT", ">=", 10, lab_data_example)
-        sick_patients("CBC: RED BLOOD CELL COUNT", "wrong input", 10, lab_data_example)
-        sick_patients("CBC: RED BLOOD CELL COUNT", "< ", 10, lab_data_example)
+        sick_patients("CBC: RED BLOOD CELL COUNT", ">=", 10, data_test)
+        sick_patients("CBC: RED BLOOD CELL COUNT", "wrong input", 10, data_test)
+        sick_patients("CBC: RED BLOOD CELL COUNT", "< ", 10, data_test)
 
 
 def test_age_at_admission():
     """Test age_at_admission() function."""
-    assert (
-        age_at_admission(
-            "EITSIO5D-YZF2-KYU2-QYVB-0CYV1AQ4AWH3", pat_data_example, lab_data_example
-        )
-        == 6
-    )
-    assert (
-        age_at_admission(
-            "315AHQQH-Y4MW-MDY4-UDYX-ESTMBGKASAGY", pat_data_example, lab_data_example
-        )
-        == 15
-    )
-    assert (
-        age_at_admission(
-            "5UGO1HF9-QFVJ-PW9E-WMS5-SLCOUGK8NAZ7", pat_data_example, lab_data_example
-        )
-        == 18
-    )
-    assert (
-        age_at_admission(
-            "ORM1FW1N-BYOI-J3ZA-0PLB-MJ9SNP3H1WFF", pat_data_example, lab_data_example
-        )
-        == 7
-    )
-    assert (
-        age_at_admission(
-            "UWO429L9-E60B-LJEO-M1U2-NHJSBHCSOZDD", pat_data_example, lab_data_example
-        )
-    ) == 24
+    assert age_at_admission("EITSIO5D-YZF2-KYU2-QYVB-0CYV1AQ4AWH3", data_test) == 6
+    assert age_at_admission("315AHQQH-Y4MW-MDY4-UDYX-ESTMBGKASAGY", data_test) == 15
+    assert age_at_admission("5UGO1HF9-QFVJ-PW9E-WMS5-SLCOUGK8NAZ7", data_test) == 18
+    assert age_at_admission("ORM1FW1N-BYOI-J3ZA-0PLB-MJ9SNP3H1WFF", data_test) == 7
+    assert age_at_admission("UWO429L9-E60B-LJEO-M1U2-NHJSBHCSOZDD", data_test) == 24
     with pytest.raises(ValueError):
-        age_at_admission("aaa", pat_data_example, lab_data_example)
-        age_at_admission(
-            "9VWI26ZY-R196-J48V-TLUK-E045NMVQ0KYG", pat_data_example, lab_data_example
-        )
-        age_at_admission(
-            "EITSIO5D-YZF2-KYU2-QYVB-0CYV1AQ4AWH3 ", pat_data_example, lab_data_example
-        )
+        age_at_admission("aaa", data_test)
+        age_at_admission("9VWI26ZY-R196-J48V-TLUK-E045NMVQ0KYG", data_test)
+        age_at_admission("EITSIO5D-YZF2-KYU2-QYVB-0CYV1AQ4AWH3 ", data_test)
