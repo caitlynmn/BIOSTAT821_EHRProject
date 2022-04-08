@@ -13,20 +13,9 @@ Patient demographic EHR data is taken in as a tab-separated table .txt file with
 
 Laboratory EHR data is taken in as a tab-separated table .txt file with the following columns of data as its variables: `PatientID`, `AdmissionID`, `LabName`, `LabValue`, `LabUnits`, and `LabDateTime`. The .txt. file `LabData_Test.txt` is included as an example file for laboratory EHR data.
 
+A database called "ehr_data.db" is initializaed within the module and used to store patient EHR data.
+
 # Class Descriptions
-
-## Lab Class
-The Lab class is initialized as: `Lab(PATID: str, AdmissionID: str, LabName: str, LabValue: float, LabUnits: str, LabDateTime: datetime)`.
-
-The Lab class has the following instance attributes:
-* PATID
-* AdmissionID
-* LabName
-* LabValue
-* LabUnits
-* LabDateTime
-
-Each instance of the Lab class stores attributes for a single lab datapoint.
 
 ## Patient Class
 The Patient class is initialized as: `Patient(PATID: str, gender: str, DOB: datetime, race: str, marital: str, labs: list[Lab])`.
@@ -35,17 +24,13 @@ Each instance of the Patient class stores attributes for a single patient.
 
 The Patient class has the following instance attributes:
 * PATID
-* gender
-* DOB
-* race
-* marital
-* labs
 
 The Patient class has the following properties:
 * age
-* lab_dict, a dictionary with the keys being the lab names available for the patient and the values being a dictionary with the keys "Value", "Units", "Date", and "Age" for the corresponding lab.
+* date_of_birth
+* age_at_admiss
 
-The method `check_lab_values(self, lab_name: str, gt_lt: str, value: float)` is used to check if lab values for that patient are greater/less than a given value. The method returns True if lab values are greater/less than given value or False if the condition is not met.
+The method `check_lab_values(self, lab_name: str, gt_lt: str, lab_value: float)` is used to check if lab values for that patient are greater/less than a given value. The method returns True if lab values are greater/less than given value or False if the condition is not met.
 
 # Function Descriptions
 
