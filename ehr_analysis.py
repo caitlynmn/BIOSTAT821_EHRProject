@@ -8,7 +8,8 @@ from xmlrpc.client import boolean
 
 def establish_con():
     """Establish connection."""
-    os.remove("ehr_data.db")
+    if os.path.exists("ehr_data.db"):
+        os.remove("ehr_data.db")
     con = sqlite3.connect("ehr_data.db")
     return con
 
