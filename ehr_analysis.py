@@ -1,196 +1,148 @@
-"""EHR Analysis.
-
-Caitlyn Nguyen
-BIOSTAT821
-
-"""
+"""EHR Analysis Part 4."""
+from ast import Raise
+import sqlite3
+import os
 from datetime import datetime
+from xmlrpc.client import boolean
 
 
-class Lab:
-    """Lab object."""
+def establish_con():
+    """Establish connection."""
+    if os.path.exists("ehr_data.db"):
+        os.remove("ehr_data.db")
+    con = sqlite3.connect("ehr_data.db")
+    return con
 
-    def __init__(
-        self,
-        patid: str,
-        admission_id: str,
-        lab_name: str,
-        lab_value: float,
-        lab_units: str,
-        lab_datetime: datetime,
-    ):
-        """Initialize."""
-        self.patid = patid
-        self.admission_id = admission_id
-        self.lab_name = lab_name
-        self.lab_value = lab_value
-        self.lab_units = lab_units
-        self.lab_datetime = lab_datetime
+
+def calculate_age(dob: str, doi: str) -> int:
+    """Calculate age from date of birth (dob) and date of interest (doi)."""
+    date_of_birth = datetime.strptime(dob, "%Y-%m-%d")
+    if doi == "today":
+        date_of_interest = datetime.today()
+    else:
+        date_of_interest = datetime.strptime(doi, "%Y-%m-%d")
+    age = (
+        date_of_interest.year
+        - date_of_birth.year
+        - (
+            (date_of_interest.month, date_of_interest.day)
+            < (date_of_birth.month, date_of_birth.day)
+        )
+    )
+    return age
 
 
 class Patient:
     """Patient object."""
 
-    def __init__(
-        self,
-        patid: str,
-        gender: str,
-        dob: datetime,
-        race: str,
-        marital: str,
-        labs: list[Lab],
-    ):
+    def __init__(self, patid: str):
         """Initialize."""
         self.patid = patid
-        self.gender = gender
-        self.dob = dob
-        self.race = race
-        self.marital = marital
-        self.labs = labs
-        self._lab_dict = None
+        self.con = sqlite3.connect("ehr_data.db")
+        self.cur = self.con.cursor()
 
     @property
-    def age(self):
+    def date_of_birth(self) -> str:
+        """Patient date of birth."""
+        date_of_birth = self.cur.execute(
+            "SELECT date_of_birth FROM patient_data WHERE [patient_id] = ?",
+            (self.patid,),
+        ).fetchone()
+        date_of_birth = "".join(date_of_birth)[0:10]
+        return date_of_birth
+
+    @property
+    def age(self) -> int:
         """Calculate patient age."""
-        today = datetime.today()
-        age = (
-            today.year
-            - self.dob.year
-            - ((today.month, today.day) < (self.dob.month, self.dob.day))
-        )
+        age = calculate_age(self.date_of_birth, "today")
         return age
 
-    @property
-    def lab_dict(self):
-        """Transform lab objects to dictionary.
-
-        Creates a dictionary with the keys being the lab names and the values
-        being a dictionary with the keys "Value", "Units", "Date", and "Age"
-        for the corresponding lab. Complexity is O(M) as it is required to
-        loop over each lab for the patient, assuming that this is the first
-        call to the property. All other single operations are ignored for
-        big O analysis.
-        """
-        if self._lab_dict is None:  # O(1)
-            lab_dict: dict = dict()  # O(1)
-            for lab in self.labs:  # M times
-                if lab.lab_name not in lab_dict.keys():  # O(1)
-                    nested_lab_list = [lab]
-                    lab_dict[lab.lab_name] = nested_lab_list  # O(1)
-                else:  # O(1)
-                    nested_lab_list = lab_dict[lab.lab_name]
-                    nested_lab_list.append(lab)
-                    lab_dict[lab.lab_name] = nested_lab_list  # O(1)
-            self._lab_dict = lab_dict  # O(1)
-        return self._lab_dict  # O(1)
-
-    def check_lab_values(self, lab_name: str, gt_lt: str, value: float):
-        """Check if lab values are greater/less than given value.
-
-        Returns True if lab values are greater/less than given value or
-        False if the condition is not met.
-
-        Complexity is O(M) assuming self.lab_dict has not been run yet in
-        the worst-case scenario. All other operations are single, which are
-        ignored for big O analysis.
-        """
+    def check_lab_values(self, lab_name: str, gt_lt: str, lab_val: float) -> bool:
+        """Check if there is a patient lab value < or > given value."""
+        lab_value = str(lab_val)
 
         if gt_lt != ">" and gt_lt != "<":
             raise ValueError("Second input should be '<' or '>'")
-        lab_list = self.lab_dict[lab_name]  # O(M)
-        for each_lab in lab_list:
-            if gt_lt == ">":  # O(1)
-                if each_lab.lab_value > value:  # O(1)
-                    return True  # O(1)
-                else:  # O(1)
-                    continue  # O(1)
-            elif gt_lt == "<":  # O(1)
-                if each_lab.lab_value < value:  # O(1)
-                    return True  # O(1)
-                else:  # O(1)
-                    continue  # O(1)
+
+        if gt_lt == "<":
+            labs = self.cur.execute(
+                "SELECT [lab_value], [lab_date] FROM lab_data WHERE \
+                    [patient_id] = ? AND [lab_name] = ? AND [lab_value] < ?",
+                (self.patid, lab_name, lab_value),
+            ).fetchall()
+        elif gt_lt == ">":
+            labs = self.cur.execute(
+                "SELECT [lab_value] FROM lab_data WHERE \
+                    [patient_id] = ? AND [lab_name] = ? AND [lab_value] > ?",
+                (self.patid, lab_name, lab_value),
+            ).fetchall()
+
+        if len(labs) > 0:
+            return True
         else:
-            return False  # O(1)
+            return False
+
+    @property
+    def age_at_admiss(self) -> int:
+        """Find age at admission."""
+        admission_date = self.cur.execute(
+            "SELECT MIN([lab_date]) FROM lab_data WHERE [patient_id] = ?",
+            (self.patid,),
+        ).fetchone()
+        admission_date = "".join(admission_date)[0:10]
+        age = calculate_age(self.date_of_birth, admission_date)
+        return age
 
 
 def parse_data(patient_file: str, lab_file: str) -> list[Patient]:
-    r"""Parse lab and patient data to a list of patient objects.
+    """Parse lab and patient data to a SQL database."""
+    con = establish_con()
+    cur = con.cursor()
 
-    Assumptions:
-    * patient_file is a string of the name of the patient EHR data .txt file.
-    * lab_file is a string of the name of the lab EHR data .txt file.
-    * Each line in the data .txt file is single datapoint.
-    * Each column in the data .txt file is an EHR variable.
-    * Values within a row are separated by the tab character '\t\'.
-    * All patients in the patient EHR file have labs in the lab EHR file.
-    * For the Lab data file:
-        * The first row in the EHR data is the variable names.
-        * The columns of data are in the following order: PatientID,
-            admission_id, lab_name, lab_value, lab_units, lab_datetime
-        * LabeDateTime is recorded as "YYYY-MM-DD".
-    * For the Patient data file:
-        * The first row in the EHR data is the variable names.
-        * The columns of data are in the following order: PatientID,
-            PatientGender, PatientDateOfBirth, PatientRace,
-            PatientMaritalStatus, PatientLanguage,
-            PatientPopulationPercentageBelowPoverty
-        * PatientDatOfBirth is recorded as "YYYY-MM-DD".
+    cur.execute(
+        "CREATE TABLE patient_data([patient_id] TEXT, \
+            [gender] TEXT, \
+                [date_of_birth] DATE, \
+                    [race] TEXT, \
+                        [marital_status] TEXT, \
+                            [language] TEXT, \
+                                [percent_below_poverty] FLOAT)"
+    )
 
-    Computational complexity:
-    The labs are looped over for M*N times to produce a dictionary of labs,
-    where the keys are the patids and the values are a list of Lab objects
-    which correspond to the patient. The patients are looped over for
-    N times to produce a list of Patient objects. For big-O analysis,
-    the constant factors can be ignored, so this function is of
-    O(M*N + N) complexity.
-
-    """
-    lab_dictionary: dict = {}  # O(1)
+    cur.execute(
+        "CREATE TABLE lab_data([patient_id] TEXT, \
+            [admission_id] TEXT, \
+                [lab_name] TEXT, \
+                    [lab_value] FLOAT, \
+                        [lab_units] TEXT, \
+                            [lab_date] DATE)"
+    )
 
     with open(lab_file) as file:  # O(1)
         next(file)  # O(1)
         for line in file:  # M*N times
             lab_line = line.strip().split("\t")  # O(1)
-            if lab_line[0] not in lab_dictionary.keys():  # O(1)
-                lab_dictionary[lab_line[0]] = [
-                    Lab(
-                        lab_line[0],
-                        lab_line[1],
-                        lab_line[2],
-                        float(lab_line[3]),
-                        lab_line[4],
-                        datetime.strptime(lab_line[5][0:10], "%Y-%m-%d"),
-                    )
-                ]  # O(1)
-            else:  # O(1)
-                lab_dictionary[lab_line[0]].append(
-                    Lab(
-                        lab_line[0],
-                        lab_line[1],
-                        lab_line[2],
-                        float(lab_line[3]),
-                        lab_line[4],
-                        datetime.strptime(lab_line[5][0:10], "%Y-%m-%d"),
-                    )
-                )  # O(1)
+            lab_line[5] = datetime.strptime(lab_line[5][0:10], "%Y-%m-%d")
+            cur.execute(
+                "INSERT INTO lab_data VALUES (?, ?, ?, ?, ?, ?)",
+                lab_line,
+            )
 
     with open(patient_file) as file:  # O(1)
         next(file)  # O(1)
-        results = []  # O(1)
+        results = []
         for line in file:  # N times
             patient_line = line.strip().split("\t")  # O(1)
-            results.append(
-                Patient(
-                    patient_line[0],
-                    patient_line[1],
-                    datetime.strptime(patient_line[2][0:10], "%Y-%m-%d"),
-                    patient_line[3],
-                    patient_line[4],
-                    lab_dictionary[patient_line[0]],
-                )
-            )  # O(1)
+            patient_line[2] = datetime.strptime(patient_line[2][0:10], "%Y-%m-%d")
+            cur.execute(
+                "INSERT INTO patient_data VALUES (?, ?, ?, ?, ?, ?, ?)",
+                patient_line,
+            )
+            results.append(Patient(patient_line[0]))  # O(1)
 
-    return results  # O(1)
+    con.commit()
+
+    return results
 
 
 def num_older_than(compared_age: float, patient_list: list[Patient]) -> int:
@@ -227,15 +179,15 @@ def sick_patients(
     Computational complexity:
     A blank set is created with a single operation. Each patient is checked
     to see if lab values are greater than or less than given value which uses
-    a function of O(M). It takes a single operation to add the patient ID
+    a function of O(1). It takes a single operation to add the patient ID
     to the set if the condition is met. Return adds another single operation.
     Constant factors are ignored for big-O analysis, so this is of
-    O(M*N) complexity.
+    O(N) complexity.
 
     """
     pat_ids = set()  # O(1)
     for patient in patient_list:  # N times
-        if patient.check_lab_values(lab, gt_lt, value):  # O(M)
+        if patient.check_lab_values(lab, gt_lt, value):  # O(1)
             pat_ids.add(patient.patid)  # O(1)
     return pat_ids  # O(1)
 
@@ -249,37 +201,12 @@ def age_at_admission(patid: str, patient_list: list[Patient]) -> float:
     Computational complexity:
     The provided patient ID is searched for within the provided patient data
     by looping over the patient dataset up to N times. If the patient ID is
-    in the dataset, then the patient's lab data is recorded and the
-    algorithm stops iterating for a total of 3 operations. Recording the lab
-    data is O(M), assuming lab_dict property has not been called upon yet.
-    If the patient ID is not found in the patient dataset, then a
-    ValueError is raised using two single operations. Then a single
-    operation is used to assign patient age to a large number.
-    The algorithm then iterates M times. with three single operations
-    each loop. Constant factors are ignored for big-O analysis, so this
-    function is of O(M*N + M) complexity.
+    in the dataset, then the patient class age_at_admiss property is returned.
+    The function thus has a computational complexity of O(N).
 
     """
     for patient in patient_list:  # N times
         if patient.patid == patid:  # O(1)
-            lab_data = patient.lab_dict  # O(M)
-            patient_dob = patient.dob
-            break  # O(1)
+            return patient.age_at_admiss  # O(1)
     else:
         raise ValueError("Patient is not in the provided dataset.")  # O(1)
-
-    patient_age = 999  # O(1)
-
-    for each_lab_cluster in lab_data.values():
-        for each_lab in each_lab_cluster:
-            age = (
-                each_lab.lab_datetime.year
-                - patient_dob.year
-                - (
-                    (each_lab.lab_datetime.month, each_lab.lab_datetime.day)
-                    < (patient_dob.month, patient_dob.day)
-                )
-            )
-            if age < patient_age:
-                patient_age = age
-    return patient_age

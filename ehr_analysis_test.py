@@ -2,7 +2,6 @@
 
 import pytest
 from ehr_analysis import (
-    Lab,
     Patient,
     parse_data,
     num_older_than,
@@ -11,54 +10,28 @@ from ehr_analysis import (
 )
 from datetime import datetime
 
-# Create dictionary of possible options in lab and patient data
-options_dict = {}
-options_dict["PatientGender"] = ["Male", "Female"]
-options_dict["PatientRace"] = ["Unknown", "African American", "Asian", "White"]
-options_dict["PatientMaritalStatus"] = [
-    "Married",
-    "Single",
-    "Divorced",
-    "Unknown",
-    "Separated",
-]
-options_dict["PatientLanguage"] = ["English", "Spanish", "Unknown", "Icelandic"]
-options_dict["LabName"] = [
-    "METABOLIC: POTASSIUM",
-    "METABOLIC: CREATININE",
-    "CBC: RED BLOOD CELL COUNT",
-]
-options_dict["LabUnits"] = ["mmol/L", "mg/dL", "m/cumm"]
-
-# Run parse_data on test patient and lab EHR txt files
-data_test = parse_data("PatientData_Test.txt", "LabData_Test.txt")
-
 
 def test_parse_data():
     """Test parse_data() function."""
     # Test patient data
+
+    # Run parse_data on test patient and lab EHR txt files
+    data_test = parse_data("PatientData_Test.txt", "LabData_Test.txt")
     assert isinstance(data_test, list)
 
     patient_test = data_test[0]
 
     assert isinstance(patient_test, Patient)
-    assert isinstance(patient_test.labs[0], Lab)
     assert isinstance(patient_test.patid, str)
-    assert isinstance(patient_test.dob, datetime)
-    assert len(data_test) == 5
-    assert patient_test.gender in options_dict["PatientGender"]
-    assert patient_test.race in options_dict["PatientRace"]
-    assert patient_test.marital in options_dict["PatientMaritalStatus"]
-    # Test lab data
-    labs_dict_test = patient_test.lab_dict
-    assert isinstance(labs_dict_test, dict)
-    assert all(lab in options_dict["LabName"] for lab in labs_dict_test)
-    assert labs_dict_test["METABOLIC: POTASSIUM"][0].lab_units == "mmol/L"
-    assert isinstance(labs_dict_test["METABOLIC: CREATININE"][1].lab_datetime, datetime)
+    assert isinstance(patient_test.date_of_birth, str)
+    assert isinstance(patient_test.age, int)
+    assert isinstance(patient_test.age_at_admiss, int)
 
 
 def test_num_older_than():
     """Test num_older_than() function."""
+    data_test = parse_data("PatientData_Test.txt", "LabData_Test.txt")
+
     assert isinstance(num_older_than(20, data_test), int)
     assert num_older_than(52, data_test) == 4
     assert num_older_than(92, data_test) == 2
@@ -67,6 +40,8 @@ def test_num_older_than():
 
 def test_sick_patients():
     """Test sick_patients() function."""
+    data_test = parse_data("PatientData_Test.txt", "LabData_Test.txt")
+
     assert isinstance(sick_patients("METABOLIC: POTASSIUM", ">", 30, data_test), set)
     assert isinstance(
         list(sick_patients("METABOLIC: POTASSIUM", ">", 30, data_test)).pop(),
@@ -82,6 +57,8 @@ def test_sick_patients():
 
 def test_age_at_admission():
     """Test age_at_admission() function."""
+    data_test = parse_data("PatientData_Test.txt", "LabData_Test.txt")
+
     assert age_at_admission("EITSIO5D-YZF2-KYU2-QYVB-0CYV1AQ4AWH3", data_test) == 6
     assert age_at_admission("315AHQQH-Y4MW-MDY4-UDYX-ESTMBGKASAGY", data_test) == 15
     assert age_at_admission("5UGO1HF9-QFVJ-PW9E-WMS5-SLCOUGK8NAZ7", data_test) == 18
